@@ -3,32 +3,32 @@ COPY . /tmp/
 WORKDIR /tmp
 RUN lein uberjar
 
-FROM oracle/graalvm-ce:1.0.0-rc15
-RUN gu install R
-
+FROM oracle/graalvm-ce:1.0.0-rc15 as graalvm-R
 WORKDIR /tmp
+ENV BASE_URL "https://cran.r-project.org/src/contrib/"
 
+RUN gu install R
 RUN yum update -y && yum install -y wget bzip2
 
-RUN wget https://cran.r-project.org/src/contrib/assertthat_0.2.1.tar.gz \
-https://cran.r-project.org/src/contrib/glue_1.3.1.tar.gz \
-https://cran.r-project.org/src/contrib/magrittr_1.5.tar.gz \
-https://cran.r-project.org/src/contrib/pkgconfig_2.0.2.tar.gz \
-https://cran.r-project.org/src/contrib/R6_2.4.0.tar.gz \
-https://cran.r-project.org/src/contrib/Rcpp_1.0.1.tar.gz \
-https://cran.r-project.org/src/contrib/Archive/rlang/rlang_0.3.1.tar.gz \
-https://cran.r-project.org/src/contrib/crayon_1.3.4.tar.gz \
-https://cran.r-project.org/src/contrib/cli_1.1.0.tar.gz \
-https://cran.r-project.org/src/contrib/fansi_0.4.0.tar.gz \
-https://cran.r-project.org/src/contrib/utf8_1.1.4.tar.gz \
-https://cran.r-project.org/src/contrib/pillar_1.3.1.tar.gz \
-https://cran.r-project.org/src/contrib/tibble_2.1.1.tar.gz \
-https://cran.r-project.org/src/contrib/purrr_0.3.2.tar.gz \
-https://cran.r-project.org/src/contrib/Rcpp_1.0.1.tar.gz \
-https://cran.r-project.org/src/contrib/tidyselect_0.2.5.tar.gz \
-https://cran.r-project.org/src/contrib/BH_1.69.0-1.tar.gz \
-https://cran.r-project.org/src/contrib/plogr_0.2.0.tar.gz \
-https://cran.r-project.org/src/contrib/dplyr_0.8.0.1.tar.gz
+RUN wget ${BASE_URL}/assertthat_0.2.1.tar.gz \
+${BASE_URL}/glue_1.3.1.tar.gz \
+${BASE_URL}/magrittr_1.5.tar.gz \
+${BASE_URL}/pkgconfig_2.0.2.tar.gz \
+${BASE_URL}/R6_2.4.0.tar.gz \
+${BASE_URL}/Rcpp_1.0.1.tar.gz \
+${BASE_URL}/Archive/rlang/rlang_0.3.1.tar.gz \
+${BASE_URL}/crayon_1.3.4.tar.gz \
+${BASE_URL}/cli_1.1.0.tar.gz \
+${BASE_URL}/fansi_0.4.0.tar.gz \
+${BASE_URL}/utf8_1.1.4.tar.gz \
+${BASE_URL}/pillar_1.3.1.tar.gz \
+${BASE_URL}/tibble_2.1.1.tar.gz \
+${BASE_URL}/purrr_0.3.2.tar.gz \
+${BASE_URL}/Rcpp_1.0.1.tar.gz \
+${BASE_URL}/tidyselect_0.2.5.tar.gz \
+${BASE_URL}/BH_1.69.0-1.tar.gz \
+${BASE_URL}/plogr_0.2.0.tar.gz \
+${BASE_URL}/dplyr_0.8.0.1.tar.gz
 
 RUN R CMD INSTALL assertthat_0.2.1.tar.gz
 RUN R CMD INSTALL glue_1.3.1.tar.gz
@@ -50,7 +50,9 @@ RUN R CMD INSTALL BH_1.69.0-1.tar.gz
 RUN R CMD INSTALL plogr_0.2.0.tar.gz
 RUN R CMD INSTALL dplyr_0.8.0.1.tar.gz
 
-Env JAR_DIR "/usr/share/java"
+FROM graalvm-R
+WORKDIR /tmp
+ENV JAR_DIR "/usr/share/java"
 
 COPY --from=builder /tmp/target/uberjar/hello-graalvm-0.1.0-SNAPSHOT-standalone.jar ${JAR_DIR}/hello-graalvm-0.1.0-SNAPSHOT-standalone.jar
 COPY deploy /usr/local/deploy
