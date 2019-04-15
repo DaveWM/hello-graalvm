@@ -10,8 +10,8 @@
                  (.allowAllAccess true)
                  (.build)))
 
-
-(defn execute-script [filename args]
+;; Read R source from file
+#_(defn execute-script [filename args]
   (let [source-file (io/file (io/resource filename))
         source-language (Source/findLanguage source-file)
         source-script (-> (Source/newBuilder source-language source-file)
@@ -19,12 +19,32 @@
     (-> (.eval context source-script)
         (.execute (into-array args)))))
 
+;; Read R source from raw string
+(defn execute-script [filename args]
+  (let [source-script "require(dplyr)
+require(tibble)
+
+function(value_in, date_in) {
+    if (length(which(!is.na(value_in))) == 0)
+    {'pass'}
+    else {
+        nrow <- tibble(value = value_in %>% replace(.,is.na(.),0),
+                       date = date_in) %>%
+            filter(is.na(date))
+        
+        ifelse(sum(nrow$value,na.rm=T)>=100,'fail','pass')
+    } 
+}" ]
+    (-> (.eval context "R" source-script )
+        (.execute (into-array args)))))
+
 
 (defn -main
   [& args]
   (println "Hello Grallvm!")
   (-> (execute-script "example.R" [10001 10001])
-      (.asString)))
+      (.asString)
+      (println)))
 
 
 #_(-main)
